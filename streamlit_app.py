@@ -4,7 +4,7 @@ from openai import OpenAI
 @st.cache_data
 def get_response(prompt):
     response = client.responses.create(
-        model="gpt-4.1-mini",
+        model="gpt-5.4-mini",
         input=prompt
     )
     return response.output_text
