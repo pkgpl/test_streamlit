@@ -35,7 +35,7 @@ if "chatpdf_messages" not in st.session_state:
 if "chatpdf_assistant" not in st.session_state:
     st.session_state.chatpdf_assistant = client.beta.assistants.create(
         instructions="첨부 파일의 정보를 이용해 응답하세요.",
-        model="gpt-4o-mini",
+        model="gpt-5.4-mini",
         tools=[{"type": "file_search"}],
         tool_resources={
            "file_search":{
