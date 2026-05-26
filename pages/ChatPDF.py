@@ -32,36 +32,32 @@ if 'vector_store' not in st.session_state:
 if "chatpdf_messages" not in st.session_state:
     st.session_state.chatpdf_messages = []
 
-if "chatpdf_assistant" not in st.session_state:
-    st.session_state.chatpdf_assistant = client.beta.assistants.create(
-        instructions="첨부 파일의 정보를 이용해 응답하세요.",
-        model="gpt-4o-mini",
-        tools=[{"type": "file_search"}],
-        tool_resources={
-           "file_search":{
-              "vector_store_ids": [vector_store.id]
-            }
-        }
-    )
-    
-if "chatpdf_thread" not in st.session_state:
-    st.session_state.chatpdf_thread = client.beta.threads.create()
+
+client = st.session_state.get('openai_client', None)
+if client is None:
+    if st.button("API Key를 입력하세요."):
+        st.switch_page("streamlit_app.py")
+    st.stop()
+
+if "chatpdf_messages" not in st.session_state:
+    st.session_state.chatbot_messages = [
+        {"role":"system","content":f"""
+첨부 파일의 내용을 이용해 대답하세요.
+"""}
+    ]
 
 
 # Page
 
-st.header("Chat")
+st.header("ChatPDF")
 
 col1, col2 = st.columns(2)
 with col1:
     if st.button("Clear (Start a new chat)"):
         st.session_state.chatpdf_messages = []
-        del st.session_state.chatpdf_thread
 with col2:
-    if st.button("Leave"):
+    if st.button("Leave (Delete VectorStore)"):
         st.session_state.chatpdf_messages = []
-        del st.session_state.chatpdf_thread
-        del st.session_state.chatpdf_assistant
         client.vector_stores.delete(st.session_state.vector_store.id)
         del st.session_state.vector_store
 
@@ -75,33 +71,10 @@ if prompt := st.chat_input("What is up?"):
     show_message(msg)
     st.session_state.chatpdf_messages.append(msg)
 
-    # assistant api - get response
-    thread = st.session_state.chatpdf_thread
-    assistant = st.session_state.chatpdf_assistant
-
-    client.beta.threads.messages.create(
-        thread_id=thread.id,
-        role="user",
-        content=prompt
+    response = client.chat.completions.create(
+        model = "gpt-5.4-mini",
+        messages = st.session_state.chatpdf_messages
     )
-    run = client.beta.threads.runs.create_and_poll(
-        thread_id=thread.id,
-        assistant_id=assistant.id
-    )
-
-    # assistant messages - text, image_url, image_file
-    if run.status == 'completed':
-        api_response = client.beta.threads.messages.list(
-            thread_id=thread.id,
-            run_id=run.id,
-            order="asc"
-        )
-        for data in api_response.data:
-            for content in data.content:
-                if content.type == 'text':
-                    response = content.text.value
-                    msg = {"role":"assistant","content":response}
-                    show_message(msg)
-                    st.session_state.chatpdf_messages.append(msg)
-    else:
-        st.error(f"Response not completed: {run.status}")
+    msg = {"role":"assistant", "content":response.choices[0].message.content}
+    show_message(msg)
+    st.session_state.chatpdf_messages.append(msg)
