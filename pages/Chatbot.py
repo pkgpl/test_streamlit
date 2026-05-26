@@ -445,7 +445,7 @@ if prompt := st.chat_input("What is up?"):
     st.session_state.chatbot_messages.append(msg)
 
     response = client.chat.completions.create(
-        model = "gpt-4o-mini",
+        model = "gpt-5.4-mini",
         messages = st.session_state.chatbot_messages
     )
     msg = {"role":"assistant", "content":response.choices[0].message.content}
