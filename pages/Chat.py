@@ -3,12 +3,12 @@ import streamlit as st
 client = st.session_state.get('openai_client', None)
 if client is None:
     if st.button("API Key를 입력하세요."):
-        st.switch_page("streamlit_app.py")
+        st.switch_page(st.session_state["home_page"])
     st.stop()
 
 def get_response(prompt):
     response = client.responses.create(
-        model="gpt-5.4-mini",
+        model=st.session_state["llm_model"],
         input=prompt
     )
     return response.output_text

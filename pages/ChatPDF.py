@@ -10,7 +10,7 @@ def show_message(msg):
 client = st.session_state.get('openai_client', None)
 if client is None:
     if st.button("API Key를 입력하세요."):
-        st.switch_page("streamlit_app.py")
+        st.switch_page(st.session_state["home_page"])
     st.stop()
 
 # file upload
@@ -36,7 +36,7 @@ if "chatpdf_messages" not in st.session_state:
 client = st.session_state.get('openai_client', None)
 if client is None:
     if st.button("API Key를 입력하세요."):
-        st.switch_page("streamlit_app.py")
+        st.switch_page(st.session_state["home_page"])
     st.stop()
 
 if "chatpdf_messages" not in st.session_state:

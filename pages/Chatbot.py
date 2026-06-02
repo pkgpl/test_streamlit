@@ -419,7 +419,7 @@ def show_message(msg):
 client = st.session_state.get('openai_client', None)
 if client is None:
     if st.button("API Key를 입력하세요."):
-        st.switch_page("streamlit_app.py")
+        st.switch_page(st.session_state["home_page"])
     st.stop()
 
 if "chatbot_messages" not in st.session_state:
@@ -445,7 +445,7 @@ if prompt := st.chat_input("What is up?"):
     st.session_state.chatbot_messages.append(msg)
 
     response = client.chat.completions.create(
-        model = "gpt-5.4-mini",
+        model = st.session_state["llm_model"],
         messages = st.session_state.chatbot_messages
     )
     msg = {"role":"assistant", "content":response.choices[0].message.content}
