@@ -65,6 +65,7 @@ with col2:
 for msg in st.session_state.chatpdf_messages:
     show_message(msg)
 
+# NOT IMPLEMENTED YET!!! - use file_search api
 # user prompt, assistant response
 if prompt := st.chat_input("What is up?"):
     msg = {"role":"user", "content":prompt}
