@@ -1,11 +1,12 @@
 import streamlit as st
 import base64
-from openai import OpenAI
 
-st.session_state["llm_model"] = "gpt-5.4-mini"
-st.session_state["image_model"] = "gpt-image-1-mini"
-st.session_state["home_page"] = "streamlit_app2026.py"
+client = st.session_state.get("openai_client", None)
+if client is None:
+    st.markdown("사이드바에 API Key를 입력하세요.")
+    st.stop()
 
+@st.cache_data
 def get_llm_response(prompt):
     response = client.responses.create(
         model=st.session_state["llm_model"],
@@ -20,13 +21,6 @@ def generate_image(image_prompt):
 
 st.title("OpenAI GPT model")
 
-api_key= st.text_input("OpenAI API Key", type="password")
-if api_key:
-    client = OpenAI(api_key=api_key)
-    st.session_state["openai_client"] = client
-else:
-    st.markdown("API KEY를 입력하세요.")
-
 prompt = st.text_area("User prompt")
 
 if st.button("Ask!", disabled=(len(prompt)==0)):
@@ -36,4 +30,5 @@ if st.button("Ask!", disabled=(len(prompt)==0)):
 image_prompt = st.text_area("Image prompt")
 
 if st.button("Generate!", disabled=(len(image_prompt)==0)):
-    st.image(generate_image(image_prompt))
+    with st.spinner("Generating...", show_time=True):
+        st.image(generate_image(image_prompt))

@@ -418,25 +418,25 @@ def show_message(msg):
 
 client = st.session_state.get('openai_client', None)
 if client is None:
-    if st.button("API Key를 입력하세요."):
-        st.switch_page(st.session_state["home_page"])
+    st.markdown("사이드바에 API Key를 입력하세요.")
     st.stop()
 
-if "chatbot_messages" not in st.session_state:
-    st.session_state.chatbot_messages = [
-        {"role":"system","content":f"""
+# 규정집은 instructions로 따로 보내고, 대화 기록에는 user/assistant 메시지만 저장
+INSTRUCTIONS = f"""
 당신은 국립부경대학교 도서관 규정집 챗봇입니다.
 다음의 규정집 내용을 이용해 대답하고, 규정집에 없는 내용은 모른다고 답하세요.
 
 ## 규정집
-{PKNU_LIB_REG}        
-"""}
-    ]
+{PKNU_LIB_REG}
+"""
+
+if "chatbot_messages" not in st.session_state:
+    st.session_state.chatbot_messages = []
 
 
 st.header("국립부경대학교 도서관 챗봇")
 
-for msg in st.session_state.chatbot_messages[1:]:
+for msg in st.session_state.chatbot_messages:
     show_message(msg)
 
 if prompt := st.chat_input("What is up?"):
@@ -444,10 +444,12 @@ if prompt := st.chat_input("What is up?"):
     show_message(msg)
     st.session_state.chatbot_messages.append(msg)
 
-    response = client.chat.completions.create(
-        model = st.session_state["llm_model"],
-        messages = st.session_state.chatbot_messages
-    )
-    msg = {"role":"assistant", "content":response.choices[0].message.content}
-    show_message(msg)
-    st.session_state.chatbot_messages.append(msg)
+    with st.chat_message("assistant"):
+        stream = client.responses.create(
+            model = st.session_state["llm_model"],
+            instructions = INSTRUCTIONS,
+            input = st.session_state.chatbot_messages,
+            stream = True,
+        )
+        response = st.write_stream(stream)
+    st.session_state.chatbot_messages.append({"role":"assistant", "content":response})

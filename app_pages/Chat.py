@@ -1,0 +1,33 @@
+import streamlit as st
+
+client = st.session_state.get("openai_client", None)
+if client is None:
+    st.markdown("사이드바에 API Key를 입력하세요.")
+    st.stop()
+
+def clear_chat():
+    st.session_state.messages = []
+
+st.button("Clear", on_click=clear_chat)
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+if prompt := st.chat_input("What is up?"):
+    st.chat_message("user").markdown(prompt)
+
+    st.session_state.messages.append({"role":"user","content":prompt})
+
+    with st.chat_message("assistant"):
+        stream = client.responses.create(
+            model=st.session_state["llm_model"],
+            input=st.session_state.messages,
+            stream=True,
+        )
+        response = st.write_stream(stream)
+
+    st.session_state.messages.append({"role":"assistant", "content":response})
